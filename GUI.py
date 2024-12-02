@@ -57,19 +57,27 @@ class SpotifyGUI(tk.Tk):
         rating = self.rating_stars.get()
         recommendation_type = self.recommendation_dropdown.get()
 
+        print(
+            f"Artist: {artist_name}, Genre: {genre}, Danceability: {danceability}, Energy: {energy}, Rating: {rating}, Recommendation Type: {recommendation_type}")
+
         song = next((s for s in self.recommender._songs if s.getArtist() == artist_name), None)
 
         if song:
+            print(f"Song found: {song}")
             self.recommendations_text.delete("1.0", tk.END)
             if recommendation_type == "Genre":
                 recommendations = self.recommender.popularity_genre_recommendation(song)
-                self.recommendations_text.insert(tk.END, self.recommender.print_genre_recommendation(song,
-                                                                                                     recommendations))
+                print(f"Recommendations: {recommendations}")
+                self.recommendations_text.insert(tk.END,
+                                                 self.recommender.print_genre_recommendation(song, recommendations))
             elif recommendation_type == "Danceability":
                 recommendations = self.recommender.sonics_recommendation(song)
-                self.recommendations_text.insert(tk.END, self.recommender.print_sonics_recommendation(song,
-                                                                                                      recommendations))
-
+                print(f"Recommendations: {recommendations}")
+                self.recommendations_text.insert(tk.END,
+                                                 self.recommender.print_sonics_recommendation(song, recommendations))
+        else:
+            print("No matching song found.")
+            
     def display_discography(self, event):
         artist_name = self.artist_dropdown.get()
         discography = [s for s in self.recommender._songs if s.getArtist() == artist_name]
@@ -79,13 +87,12 @@ class SpotifyGUI(tk.Tk):
 
 
 if __name__ == "__main__":
-
     spotify_songs = pd.read_csv("spotify_songs.csv")
     spotify_songs = spotify_songs.drop_duplicates("track_id")
     song_object = []
 
-    min_tempo = spotify_songs["tempo"].max()
-    max_tempo = spotify_songs["tempo"].min()
+    min_tempo = spotify_songs["tempo"].min()
+    max_tempo = spotify_songs["tempo"].max()
 
     for i in range(len(spotify_songs)):
         identity = spotify_songs.iloc[i, 0]
@@ -100,8 +107,7 @@ if __name__ == "__main__":
         liveness = spotify_songs.iloc[i, 9]
         tempo = spotify_songs.iloc[i, 10]
 
-        song = Song(identity, name, artist, popularity, genre, subgenre, danceability, energy, acousticness, liveness,
-                    tempo)
+        song = Song(identity, name, artist, popularity, genre, subgenre, danceability, energy, acousticness, liveness, tempo)
         song.setTempo(min_tempo, max_tempo)
         song_object.append(song)
 
