@@ -26,31 +26,21 @@ class SpotifyGUI(tk.Tk):
         self.genre_dropdown = ttk.Combobox(self, values=list(set([s.getGenre() for s in recommender._songs])))
         self.genre_dropdown.grid(row=2, column=1, padx=10, pady=5)
 
-        self.danceability_label = tk.Label(self, text="Danceability:")
-        self.danceability_label.grid(row=3, column=0, padx=10, pady=5)
-        self.danceability_slider = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL)
-        self.danceability_slider.grid(row=3, column=1, padx=10, pady=5)
-
-        self.energy_label = tk.Label(self, text="Energy:")
-        self.energy_label.grid(row=4, column=0, padx=10, pady=5)
-        self.energy_slider = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL)
-        self.energy_slider.grid(row=4, column=1, padx=10, pady=5)
-
         self.rating_label = tk.Label(self, text="Rating:")
-        self.rating_label.grid(row=5, column=0, padx=10, pady=5)
+        self.rating_label.grid(row=3, column=0, padx=10, pady=5)
         self.rating_stars = ttk.Combobox(self, values=[1, 2, 3, 4, 5])
-        self.rating_stars.grid(row=5, column=1, padx=10, pady=5)
+        self.rating_stars.grid(row=3, column=1, padx=10, pady=5)
 
         self.recommendation_label = tk.Label(self, text="Recommendation Type:")
-        self.recommendation_label.grid(row=6, column=0, padx=10, pady=5)
-        self.recommendation_dropdown = ttk.Combobox(self, values=["Genre", "Popularity", "Danceability"])
-        self.recommendation_dropdown.grid(row=6, column=1, padx=10, pady=5)
+        self.recommendation_label.grid(row=4, column=0, padx=10, pady=5)
+        self.recommendation_dropdown = ttk.Combobox(self, values=["Genre", "Popularity"])
+        self.recommendation_dropdown.grid(row=4, column=1, padx=10, pady=5)
 
         self.submit_button = tk.Button(self, text="Submit", command=self.submit)
-        self.submit_button.grid(row=7, column=0, columnspan=2, pady=10)
+        self.submit_button.grid(row=5, column=0, columnspan=2, pady=10)
 
         self.recommendations_text = tk.Text(self, height=10, width=70)
-        self.recommendations_text.grid(row=8, column=0, columnspan=2, padx=10, pady=10)
+        self.recommendations_text.grid(row=6, column=0, columnspan=2, padx=10, pady=10)
 
     def filter_artists(self, event):
         typed = self.artist_dropdown.get()
@@ -65,12 +55,10 @@ class SpotifyGUI(tk.Tk):
     def submit(self):
         artist_name = self.artist_dropdown.get()
         genre = self.genre_dropdown.get()
-        danceability = self.danceability_slider.get()
-        energy = self.energy_slider.get()
         rating = self.rating_stars.get()
         recommendation_type = self.recommendation_dropdown.get()
 
-        print(f"Artist: {artist_name}, Genre: {genre}, Danceability: {danceability}, Energy: {energy}, Rating: {rating}, Recommendation Type: {recommendation_type}")
+        print(f"Artist: {artist_name}, Genre: {genre}, Rating: {rating}, Recommendation Type: {recommendation_type}")
 
         song = next((s for s in self.recommender._songs if s.getArtist() == artist_name), None)
 
@@ -81,10 +69,6 @@ class SpotifyGUI(tk.Tk):
                 recommendations = self.recommender.popularity_genre_recommendation(song)
                 print(f"Recommendations: {recommendations}")
                 self.recommendations_text.insert(tk.END, self.recommender.print_genre_recommendation(song, recommendations))
-            elif recommendation_type == "Danceability":
-                recommendations = self.recommender.sonics_recommendation(song)
-                print(f"Recommendations: {recommendations}")
-                self.recommendations_text.insert(tk.END, self.recommender.print_sonics_recommendation(song, recommendations))
         else:
             print("No matching song found.")
 
