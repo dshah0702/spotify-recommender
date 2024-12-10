@@ -9,8 +9,8 @@ import spotipy
 import webbrowser
 from spotipy.oauth2 import SpotifyOAuth
 
-#os.environ['TCL_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tcl8.6'
-#os.environ['TK_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tk8.6'
+os.environ['TCL_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tcl8.6'
+os.environ['TK_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tk8.6'
 
 CLIENT_ID = "b3d002f4b4a64da197edd649c1054aa6"
 CLIENT_SECRET = "0cdffccbbd5543a6a8531a26c8470d7f"
@@ -68,7 +68,7 @@ class SpotifyGUI(tk.Tk):
         # Recommendation Output with Scroll Bars
         self.output_frame = tk.Frame(self)
         self.output_frame.grid(row=5, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
-        self.output_text = tk.Text(self.output_frame, height=6, width=70, wrap="none")
+        self.output_text = tk.Text(self.output_frame, height=8, width=70, wrap="none")
         self.output_text.grid(row=0, column=0, sticky="nsew")
         self.output_scroll_y = tk.Scrollbar(self.output_frame, orient="vertical", command=self.output_text.yview)
         self.output_scroll_y.grid(row=0, column=1, sticky="ns")
