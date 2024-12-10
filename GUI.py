@@ -8,6 +8,9 @@ import pickle
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
+os.environ['TCL_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tcl8.6'
+os.environ['TK_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tk8.6'
+
 CLIENT_ID = "b3d002f4b4a64da197edd649c1054aa6"
 CLIENT_SECRET = "0cdffccbbd5543a6a8531a26c8470d7f"
 REDIRECT_URI = "http://localhost:8080/callback"
@@ -20,7 +23,6 @@ class SpotifyGUI(tk.Tk):
         super().__init__()
         self.title("Recommender System")
         self.geometry("800x600")  # Set the initial size of the window to 800x600
-
         self.recommender = recommender
         self.all_songs = list(set([s.getName() for s in recommender._songs if isinstance(s.getName(), str)]))
         self.all_artists = list(set([s.getArtist() for s in recommender._songs if isinstance(s.getArtist(), str)]))
@@ -108,6 +110,10 @@ class SpotifyGUI(tk.Tk):
             self.weighted_sonics_slider.grid_forget()
 
     def submit(self):
+        user_id = sp.current_user()["id"]
+        playlist_name = "My Recommended Songs Playlist"
+        playlist_id = create_playlist(user_id, playlist_name)
+
         song_name = self.song_menu.get()
         recommendation_type = self.rec_choice_menu.get()
 
@@ -118,14 +124,44 @@ class SpotifyGUI(tk.Tk):
             if recommendation_type == "Popularity & Genre":
                 recommendations = self.recommender.popularity_genre_recommendation(song)
                 self.output_text.insert(tk.END, self.format_recommendations(song, recommendations))
+
+                track_id = []
+                for recommendation in recommendations:
+                    track_id.append(recommendation.getId())
+                add_tracks(user_id, playlist_name, playlist_id, track_id)
+
+                playlist = f"Playlist created successfully: https://open.spotify.com/playlist/{playlist_id}"
+                self.output_text.tag_configure("bold", font=("TkDefaultFont", 10, "bold"))
+                self.output_text.insert(tk.END, playlist, "bold")
+                self.output_text.config(state=tk.DISABLED)
             elif recommendation_type == "Sonics":
                 recommendations = self.recommender.sonics_recommendation(song)
                 self.output_text.insert(tk.END, self.format_recommendations(song, recommendations))
+
+                track_id = []
+                for recommendation in recommendations:
+                    track_id.append(recommendation.getId())
+                add_tracks(user_id, playlist_name, playlist_id, track_id)
+
+                playlist = f"Playlist created successfully: https://open.spotify.com/playlist/{playlist_id}"
+                self.output_text.tag_configure("bold", font=("TkDefaultFont", 10, "bold"))
+                self.output_text.insert(tk.END, playlist, "bold")
+                self.output_text.config(state=tk.DISABLED)
             elif recommendation_type == "Hybrid":
                 weighted_popularity = self.weighted_popularity_slider.get() / 100
                 weighted_sonics = 1 - weighted_popularity
                 recommendations = self.recommender.hybrid_recommendation(song, weighted_popularity, weighted_sonics)
                 self.output_text.insert(tk.END, self.format_recommendations(song, recommendations))
+
+                track_id = []
+                for recommendation in recommendations:
+                    track_id.append(recommendation.getId())
+                add_tracks(user_id, playlist_name, playlist_id, track_id)
+
+                playlist = f"Playlist created successfully: https://open.spotify.com/playlist/{playlist_id}"
+                self.output_text.tag_configure("bold", font=("TkDefaultFont", 10, "bold"))
+                self.output_text.insert(tk.END, playlist, "bold")
+                self.output_text.config(state=tk.DISABLED)
         else:
             self.output_text.insert(tk.END, "No matching song found.")
 
@@ -140,6 +176,66 @@ class SpotifyGUI(tk.Tk):
         discography = [s for s in self.recommender._songs if s.getArtist() == artist_name]
         self.output_text.delete("1.0", tk.END)
         self.output_text.insert(tk.END, f"{artist_name} Discography:\n" + "\n".join(str(s) for s in discography))
+
+def create_playlist(user_id, playlist_name):
+    """
+    Creates the playlist for the user
+    :param user_id: Takes in the user's id
+    :param playlist_name: Takes in the name of the playlist
+    :return: Returns the playlist id to the user
+    """
+
+    # Finds all the playlists of the user
+    playlists = sp.user_playlists(user_id)
+
+    # Checks if the playlist name already exists under the user's profile, if it does, it returns the playlist id
+    for playlist in playlists['items']:
+        if playlist is not None:
+            if playlist['name'].lower() == playlist_name.lower():
+                return playlist['id']
+
+    # If the playlist does not exist, it will create the playlist under the user's id
+    playlist = sp.user_playlist_create(user=user_id, name=playlist_name, public=True)
+    return playlist['id']
+
+def check_playlist_exists(user_id, playlist_name):
+    """
+    Checks if the playlist exists
+    :param user_id: Takes in the user id
+    :param playlist_name: Takes in the playlist name
+    :return: Returns true if the playlist exists, otherwise it returns false
+    """
+    playlists = sp.user_playlists(user_id)
+
+    for playlist in playlists['items']:
+        if playlist['name'].lower() == playlist_name.lower():
+            return True
+
+    return False
+
+def add_tracks(user_id, playlist_name, playlist_id, track_id):
+    """
+    Adds track to the playlist
+    :param user_id: Takes in user id
+    :param playlist_name: Takes in playlist name
+    :param playlist_id: Takes in playlist id
+    :param track_id: Takes in track id
+    :return: Void function, returns nothing
+    """
+
+    # Checks if the playlist exists, and if it does, it clears the playlist
+    if check_playlist_exists(user_id, playlist_name):
+        print("Playlist exists. Clearing existing tracks and adding new ones.")
+        sp.playlist_replace_items(playlist_id, [])
+
+    current_track_id = []
+
+    # Checks if the track is the playlist or not. If it isn't, it adds it to the playlist
+    for track in track_id:
+        if track not in current_track_id:
+            print("Track not in playlist, adding track.")
+            sp.playlist_add_items(playlist_id, [track])
+            current_track_id.append(track)
 
 def main():
     if not os.path.exists("myData.dat"):
