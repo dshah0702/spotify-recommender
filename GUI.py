@@ -6,7 +6,9 @@ from Recommender import Recommender
 from Song import Song
 import pickle
 import spotipy
+import webbrowser
 from spotipy.oauth2 import SpotifyOAuth
+
 
 os.environ['TCL_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tcl8.6'
 os.environ['TK_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tk8.6'
@@ -21,8 +23,8 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secre
 class SpotifyGUI(tk.Tk):
     def __init__(self, recommender):
         super().__init__()
-        self.title("Recommender System")
-        self.geometry("600x600")  # Set the initial size of the window to 800x600
+        self.title("Audio Alchemy")
+        self.geometry("600x600")  # Set the initial size of the window to 600x600
         self.recommender = recommender
         self.all_songs = list(set([s.getName() for s in recommender._songs if isinstance(s.getName(), str)]))
         self.all_artists = list(set([s.getArtist() for s in recommender._songs if isinstance(s.getArtist(), str)]))
@@ -31,7 +33,7 @@ class SpotifyGUI(tk.Tk):
 
     def create_widgets(self):
         # Instruction Label
-        tk.Label(self, text="Spotify Recommender").grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+        tk.Label(self, text="Audio Alchemy").grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
         tk.Label(self, text="Hello! Please select a song and recommendation type, then click Submit to get "
                             "recommendations.\nFor hybrid recommendation, adjust the sliders to set "
@@ -124,11 +126,20 @@ class SpotifyGUI(tk.Tk):
         popularity_val = 100 - sonics_val
         self.weighted_sonics_slider.set(popularity_val)
 
-    def submit(self):
+    def print_playlist(self, recommendations):
         user_id = sp.current_user()["id"]
         playlist_name = "My Recommended Songs Playlist"
         playlist_id = create_playlist(user_id, playlist_name)
 
+        track_id = []
+        for recommendation in recommendations:
+            track_id.append(recommendation.getId())
+        add_tracks(user_id, playlist_name, playlist_id, track_id)
+
+        playlist = f"Playlist created successfully: https://open.spotify.com/playlist/{playlist_id}"
+        return playlist
+
+    def submit(self):
         song_name = self.song_menu.get()
         recommendation_type = self.rec_choice_menu.get()
 
@@ -136,47 +147,22 @@ class SpotifyGUI(tk.Tk):
 
         if song:
             self.output_text.delete("1.0", tk.END)
+            recommendations = []
+
             if recommendation_type == "Popularity & Genre":
                 recommendations = self.recommender.popularity_genre_recommendation(song)
-                self.output_text.insert(tk.END, self.format_recommendations(song, recommendations))
-
-                track_id = []
-                for recommendation in recommendations:
-                    track_id.append(recommendation.getId())
-                add_tracks(user_id, playlist_name, playlist_id, track_id)
-
-                playlist = f"Playlist created successfully: https://open.spotify.com/playlist/{playlist_id}"
-                self.output_text.tag_configure("bold", font=("TkDefaultFont", 10, "bold"))
-                self.output_text.insert(tk.END, playlist, "bold")
-                self.output_text.config(state=tk.DISABLED)
             elif recommendation_type == "Sonics":
                 recommendations = self.recommender.sonics_recommendation(song)
-                self.output_text.insert(tk.END, self.format_recommendations(song, recommendations))
-
-                track_id = []
-                for recommendation in recommendations:
-                    track_id.append(recommendation.getId())
-                add_tracks(user_id, playlist_name, playlist_id, track_id)
-
-                playlist = f"Playlist created successfully: https://open.spotify.com/playlist/{playlist_id}"
-                self.output_text.tag_configure("bold", font=("TkDefaultFont", 10, "bold"))
-                self.output_text.insert(tk.END, playlist, "bold")
-                self.output_text.config(state=tk.DISABLED)
             elif recommendation_type == "Hybrid":
                 weighted_popularity = self.weighted_popularity_slider.get() / 100
                 weighted_sonics = 1 - weighted_popularity
                 recommendations = self.recommender.hybrid_recommendation(song, weighted_popularity, weighted_sonics)
-                self.output_text.insert(tk.END, self.format_recommendations(song, recommendations))
 
-                track_id = []
-                for recommendation in recommendations:
-                    track_id.append(recommendation.getId())
-                add_tracks(user_id, playlist_name, playlist_id, track_id)
-
-                playlist = f"Playlist created successfully: https://open.spotify.com/playlist/{playlist_id}"
-                self.output_text.tag_configure("bold", font=("TkDefaultFont", 10, "bold"))
-                self.output_text.insert(tk.END, playlist, "bold")
-                self.output_text.config(state=tk.DISABLED)
+            self.output_text.insert(tk.END, self.format_recommendations(song, recommendations))
+            playlist = self.print_playlist(recommendations)
+            self.output_text.tag_configure("bold", font=("TkDefaultFont", 10, "bold"))
+            self.output_text.insert(tk.END, playlist, "bold")
+            self.output_text.config(state=tk.DISABLED)
         else:
             self.output_text.insert(tk.END, "No matching song found.")
 
