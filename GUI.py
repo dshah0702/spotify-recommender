@@ -23,7 +23,7 @@ class SpotifyGUI(tk.Tk):
     def __init__(self, recommender):
         super().__init__()
         self.title("Audio Alchemy")
-        self.geometry("600x600")  # Set the initial size of the window to 600x600
+        self.geometry("600x800")  # Set the initial size of the window to 600x600
         self.recommender = recommender
         self.all_songs = list(set([s.getName() for s in recommender._songs if isinstance(s.getName(), str)]))
         self.all_artists = list(set([s.getArtist() for s in recommender._songs if isinstance(s.getArtist(), str)]))
@@ -52,6 +52,15 @@ class SpotifyGUI(tk.Tk):
         self.rec_choice_menu.grid(row=3, column=1, padx=10, pady=10)
         self.rec_choice_menu.bind("<<ComboboxSelected>>", self.update_widgets)
 
+        # Hybrid Sliders
+        self.weighted_popularity_label = tk.Label(self, text="Weighted Popularity (%):")
+        self.weighted_popularity_slider = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL, resolution=1)
+        self.weighted_sonics_label = tk.Label(self, text="Weighted Sonics (%):")
+        self.weighted_sonics_slider = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL, resolution=1)
+
+        self.weighted_popularity_slider.config(command=self.update_sonics_slider)
+        self.weighted_popularity_slider.config(command=self.update_popularity_slider)
+
         # Submit Button
         self.submit_button = tk.Button(self, text="Submit", command=self.submit)
         self.submit_button.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
@@ -59,7 +68,7 @@ class SpotifyGUI(tk.Tk):
         # Recommendation Output with Scroll Bars
         self.output_frame = tk.Frame(self)
         self.output_frame.grid(row=5, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
-        self.output_text = tk.Text(self.output_frame, height=10, width=70, wrap="none")
+        self.output_text = tk.Text(self.output_frame, height=6, width=70, wrap="none")
         self.output_text.grid(row=0, column=0, sticky="nsew")
         self.output_scroll_y = tk.Scrollbar(self.output_frame, orient="vertical", command=self.output_text.yview)
         self.output_scroll_y.grid(row=0, column=1, sticky="ns")
@@ -73,16 +82,24 @@ class SpotifyGUI(tk.Tk):
         self.artist_menu = ttk.Combobox(self, textvariable=self.artist_var, values=self.all_artists)
         self.artist_menu.grid(row=9, column=1, padx=10, pady=10)
         self.artist_menu.bind("<KeyRelease>", self.filter_artists)
-        self.artist_menu.bind("<<ComboboxSelected>>", self.display_discography)
 
-        # Hybrid Sliders
-        self.weighted_popularity_label = tk.Label(self, text="Weighted Popularity (%):")
-        self.weighted_popularity_slider = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL, resolution=1)
-        self.weighted_sonics_label = tk.Label(self, text="Weighted Sonics (%):")
-        self.weighted_sonics_slider = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL, resolution=1)
+        # New Submit Button for artist information
+        self.artist_submit_button = tk.Button(self, text="Submit", command=self.display_discography)
+        self.artist_submit_button.grid(row=11, column=0, columnspan=2, padx=10, pady=10)
 
-        self.weighted_popularity_slider.config(command=self.update_sonics_slider)
-        self.weighted_popularity_slider.config(command=self.update_popularity_slider)
+        # New Output Box for artist information with Scroll Bars
+        self.artist_output_frame = tk.Frame(self)
+        self.artist_output_frame.grid(row=12, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+        self.artist_output_text = tk.Text(self.artist_output_frame, height=6, width=70, wrap="none")
+        self.artist_output_text.grid(row=0, column=0, sticky="nsew")
+        self.artist_output_scroll_y = tk.Scrollbar(self.artist_output_frame, orient="vertical",
+                                                   command=self.artist_output_text.yview)
+        self.artist_output_scroll_y.grid(row=0, column=1, sticky="ns")
+        self.artist_output_scroll_x = tk.Scrollbar(self.artist_output_frame, orient="horizontal",
+                                                   command=self.artist_output_text.xview)
+        self.artist_output_scroll_x.grid(row=1, column=0, sticky="ew")
+        self.artist_output_text.configure(yscrollcommand=self.artist_output_scroll_y.set,
+                                          xscrollcommand=self.artist_output_scroll_x.set)
 
     def filter_songs(self, event):
         typed = self.song_var.get()
@@ -171,11 +188,15 @@ class SpotifyGUI(tk.Tk):
             formatted_recs += f"{i}. {s.getName()} by {s.getArtist()} | Popularity: {s.getPopularity()} | Genre: {s.getGenre()} | Link: http://open.spotify.com/track/{s.getId()}\n"
         return formatted_recs
 
-    def display_discography(self, event):
+    def display_discography(self):
         artist_name = self.artist_menu.get()
-        discography = [s for s in self.recommender._songs if s.getArtist() == artist_name]
-        self.output_text.delete("1.0", tk.END)
-        self.output_text.insert(tk.END, f"{artist_name} Discography:\n" + "\n".join(str(s) for s in discography))
+        if artist_name:
+            discography = [s for s in self.recommender._songs if s.getArtist() == artist_name]
+            self.artist_output_text.delete("1.0", tk.END)
+            self.artist_output_text.insert(tk.END,
+                                           f"{artist_name} Discography:\n" + "\n".join(str(s) for s in discography))
+        else:
+            self.artist_output_text.insert(tk.END, "No artist selected.")
 
 def create_playlist(user_id, playlist_name):
     """
