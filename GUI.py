@@ -6,7 +6,6 @@ from Recommender import Recommender
 from Song import Song
 import pickle
 import spotipy
-import webbrowser
 from spotipy.oauth2 import SpotifyOAuth
 
 #os.environ['TCL_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tcl8.6'
@@ -167,25 +166,39 @@ class SpotifyGUI(tk.Tk):
 
             if recommendation_type == "Popularity & Genre":
                 recommendations = self.recommender.popularity_genre_recommendation(song)
+                self.output_text.insert(tk.END, self.format_popularity_recommendations(song, recommendations))
             elif recommendation_type == "Sonics":
                 recommendations = self.recommender.sonics_recommendation(song)
+                self.output_text.insert(tk.END, self.format_sonics_recommendations(song, recommendations))
             elif recommendation_type == "Hybrid":
                 weighted_popularity = self.weighted_popularity_slider.get() / 100
                 weighted_sonics = 1 - weighted_popularity
                 recommendations = self.recommender.hybrid_recommendation(song, weighted_popularity, weighted_sonics)
+                self.output_text.insert(tk.END, self.format_hybrid_recommendations(song, recommendations))
 
-            self.output_text.insert(tk.END, self.format_recommendations(song, recommendations))
+
             playlist = self.print_playlist(recommendations)
             self.output_text.tag_configure("bold", font=("TkDefaultFont", 10, "bold"))
             self.output_text.insert(tk.END, playlist, "bold")
-            self.output_text.config(state=tk.DISABLED)
         else:
             self.output_text.insert(tk.END, "No matching song found.")
 
-    def format_recommendations(self, song, recommendations):
-        formatted_recs = f"Here are recommendations based on {song.getName()} by {song.getArtist()}:\n"
+    def format_popularity_recommendations(self, song, recommendations):
+        formatted_recs = f"Here are recommendations based on {song.getName()} by {song.getArtist()} | Popularity: {song.getPopularity()} | Genre: {song.getGenre()}: \n"
         for i, s in enumerate(recommendations, 1):
             formatted_recs += f"{i}. {s.getName()} by {s.getArtist()} | Popularity: {s.getPopularity()} | Genre: {s.getGenre()} | Link: http://open.spotify.com/track/{s.getId()}\n"
+        return formatted_recs
+
+    def format_sonics_recommendations(self, song, recommendations):
+        formatted_recs = f"Here are recommendations based on {song.getName()} by {song.getArtist()} | Danceability: {song.getDanceability():.2f} | Energy: {song.getEnergy():.2f} | Tempo: {song.getTempo():.0f}: \n"
+        for i, s in enumerate(recommendations, 1):
+            formatted_recs += f"{i}. {s.getName()} by {s.getArtist()} | Danceability: {s.getDanceability():.2f} | Energy: {s.getEnergy():.2f} | Tempo: {s.getTempo():.0f}| Link: http://open.spotify.com/track/{s.getId()}\n"
+        return formatted_recs
+
+    def format_hybrid_recommendations(self, song, recommendations):
+        formatted_recs = f"Here are recommendations based on {song.getName()} by {song.getArtist()} | Popularity: {song.getPopularity()} | Danceability: {song.getDanceability():.2f} | Energy: {song.getEnergy():.2f} | Tempo: {song.getTempo():.0f}:\n"
+        for i, s in enumerate(recommendations, 1):
+            formatted_recs += f"{i}. {s.getName()} by {s.getArtist()} | Popularity: {s.getPopularity()} | Danceability: {s.getDanceability():.2f} | Energy: {s.getEnergy():.2f} | Tempo: {s.getTempo():.0f} | Link: http://open.spotify.com/track/{s.getId()}\n"
         return formatted_recs
 
     def display_discography(self):
