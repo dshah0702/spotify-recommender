@@ -9,9 +9,8 @@ import spotipy
 import webbrowser
 from spotipy.oauth2 import SpotifyOAuth
 
-
-os.environ['TCL_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tcl8.6'
-os.environ['TK_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tk8.6'
+#os.environ['TCL_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tcl8.6'
+#os.environ['TK_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tk8.6'
 
 CLIENT_ID = "b3d002f4b4a64da197edd649c1054aa6"
 CLIENT_SECRET = "0cdffccbbd5543a6a8531a26c8470d7f"
