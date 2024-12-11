@@ -8,21 +8,23 @@ import pickle
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
-#os.environ['TCL_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tcl8.6'
-#os.environ['TK_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tk8.6'
+# os.environ['TCL_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tcl8.6'
+# os.environ['TK_LIBRARY'] = 'C:/Users/User/AppData/Local/Programs/Python/Python313/tcl/tk8.6'
 
 CLIENT_ID = "b3d002f4b4a64da197edd649c1054aa6"
 CLIENT_SECRET = "0cdffccbbd5543a6a8531a26c8470d7f"
 REDIRECT_URI = "http://localhost:8080/callback"
 
 scope = "playlist-modify-public"
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI, scope=scope))
+sp = spotipy.Spotify(
+    auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI, scope=scope))
 
 class SpotifyGUI(tk.Tk):
     def __init__(self, recommender):
         super().__init__()
         self.title("Audio Alchemy")
         self.geometry("600x800")  # Set the initial size of the window to 600x600
+        self.configure(bg="#2c3e50")
         self.recommender = recommender
         self.all_songs = list(set([s.getName() for s in recommender._songs if isinstance(s.getName(), str)]))
         self.all_artists = list(set([s.getArtist() for s in recommender._songs if isinstance(s.getArtist(), str)]))
@@ -31,23 +33,29 @@ class SpotifyGUI(tk.Tk):
 
     def create_widgets(self):
         # Instruction Label
-        tk.Label(self, text="Audio Alchemy").grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+        tk.Label(self, text="Audio Alchemy", font=("Arial", 20, "bold"), fg="white", bg="#2c3e50").grid(
+            row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
-        tk.Label(self, text="Hello! Please select a song and recommendation type, then click Submit to get "
-                            "recommendations.\nFor hybrid recommendation, adjust the sliders to set "
-                            "weights.").grid(row=1, column=0, columnspan=2, padx=10, pady=10)
+        tk.Label(self, text=("Hello! Please select a song and recommendation type, "
+                             "then click Submit to get recommendations.\n"
+                             "For hybrid recommendation, adjust the sliders to set weights."),
+                 font=("Arial", 10), fg="white", bg="#2c3e50", wraplength=550
+                 ).grid(row=1, column=0, columnspan=2, padx=10, pady=10)
 
         # Song Selection
-        tk.Label(self, text="Song:").grid(row=2, column=0, padx=10, pady=10)
+        tk.Label(self, text="Song:", font=("Arial", 12), fg="white", bg="#2c3e50").grid(row=2, column=0, padx=10, pady=10)
         self.song_var = tk.StringVar()
         self.song_menu = ttk.Combobox(self, textvariable=self.song_var, values=self.all_songs)
         self.song_menu.grid(row=2, column=1, padx=10, pady=10)
         self.song_menu.bind("<KeyRelease>", self.filter_songs)
 
         # Recommendation Choice
-        tk.Label(self, text="Recommendation Choice:").grid(row=3, column=0, padx=10, pady=10)
+        tk.Label(self, text="Recommendation Choice:", font=("Arial", 12), fg="white", bg="#2c3e50").grid(
+            row=3, column=0, padx=10, pady=10
+        )
         self.rec_choice_var = tk.StringVar()
-        self.rec_choice_menu = ttk.Combobox(self, textvariable=self.rec_choice_var, values=["Popularity & Genre", "Sonics", "Hybrid"])
+        self.rec_choice_menu = ttk.Combobox(self, textvariable=self.rec_choice_var,
+                                            values=["Popularity & Genre", "Sonics", "Hybrid"])
         self.rec_choice_menu.grid(row=3, column=1, padx=10, pady=10)
         self.rec_choice_menu.bind("<<ComboboxSelected>>", self.update_widgets)
 
@@ -61,7 +69,8 @@ class SpotifyGUI(tk.Tk):
         self.weighted_popularity_slider.config(command=self.update_popularity_slider)
 
         # Submit Button
-        self.submit_button = tk.Button(self, text="Submit", command=self.submit)
+        self.submit_button = tk.Button(self, text="Submit", font=("Arial", 12, "bold"), bg="#1abc9c", fg="white",
+                                       command=self.submit)
         self.submit_button.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
 
         # Recommendation Output with Scroll Bars
@@ -76,14 +85,17 @@ class SpotifyGUI(tk.Tk):
         self.output_text.configure(yscrollcommand=self.output_scroll_y.set, xscrollcommand=self.output_scroll_x.set)
 
         # Artist Selection
-        tk.Label(self, text="Artist:").grid(row=9, column=0, padx=10, pady=10)
+        tk.Label(self, text="Artist:", font=("Arial", 12), fg="white", bg="#2c3e50").grid(row=9, column=0, padx=10,
+                                                                                          pady=10)
         self.artist_var = tk.StringVar()
         self.artist_menu = ttk.Combobox(self, textvariable=self.artist_var, values=self.all_artists)
         self.artist_menu.grid(row=9, column=1, padx=10, pady=10)
         self.artist_menu.bind("<KeyRelease>", self.filter_artists)
 
         # New Submit Button for artist information
-        self.artist_submit_button = tk.Button(self, text="Submit", command=self.display_discography)
+        self.artist_submit_button = tk.Button(
+            self, text="Submit", font=("Arial", 12, "bold"), bg="#1abc9c", fg="white", command=self.display_discography
+        )
         self.artist_submit_button.grid(row=11, column=0, columnspan=2, padx=10, pady=10)
 
         # New Output Box for artist information with Scroll Bars
@@ -105,7 +117,8 @@ class SpotifyGUI(tk.Tk):
         if typed == "":
             self.song_menu['values'] = self.all_songs
         else:
-            filtered_songs = [song for song in self.all_songs if isinstance(song, str) and typed.lower() in song.lower()]
+            filtered_songs = [song for song in self.all_songs if
+                              isinstance(song, str) and typed.lower() in song.lower()]
             self.song_menu['values'] = filtered_songs
         self.song_menu.event_generate("<Dropdown>")
 
@@ -114,7 +127,8 @@ class SpotifyGUI(tk.Tk):
         if typed == "":
             self.artist_menu['values'] = self.all_artists
         else:
-            filtered_artists = [artist for artist in self.all_artists if isinstance(artist, str) and typed.lower() in artist.lower()]
+            filtered_artists = [artist for artist in self.all_artists if
+                                isinstance(artist, str) and typed.lower() in artist.lower()]
             self.artist_menu['values'] = filtered_artists
         self.artist_menu.event_generate("<Dropdown>")
 
@@ -176,7 +190,6 @@ class SpotifyGUI(tk.Tk):
                 recommendations = self.recommender.hybrid_recommendation(song, weighted_popularity, weighted_sonics)
                 self.output_text.insert(tk.END, self.format_hybrid_recommendations(song, recommendations))
 
-
             playlist = self.print_playlist(recommendations)
             self.output_text.tag_configure("bold", font=("TkDefaultFont", 10, "bold"))
             self.output_text.insert(tk.END, playlist, "bold")
@@ -211,6 +224,7 @@ class SpotifyGUI(tk.Tk):
         else:
             self.artist_output_text.insert(tk.END, "No artist selected.")
 
+
 def create_playlist(user_id, playlist_name):
     """
     Creates the playlist for the user
@@ -232,6 +246,7 @@ def create_playlist(user_id, playlist_name):
     playlist = sp.user_playlist_create(user=user_id, name=playlist_name, public=True)
     return playlist['id']
 
+
 def check_playlist_exists(user_id, playlist_name):
     """
     Checks if the playlist exists
@@ -246,6 +261,7 @@ def check_playlist_exists(user_id, playlist_name):
             return True
 
     return False
+
 
 def add_tracks(user_id, playlist_name, playlist_id, track_id):
     """
@@ -271,6 +287,7 @@ def add_tracks(user_id, playlist_name, playlist_id, track_id):
             sp.playlist_add_items(playlist_id, [track])
             current_track_id.append(track)
 
+
 def main():
     if not os.path.exists("myData.dat"):
         spotify_songs = pd.read_csv("spotify_songs.csv")
@@ -290,7 +307,8 @@ def main():
             acousticness = spotify_songs.iloc[i, 17]
             liveness = spotify_songs.iloc[i, 19]
             tempo = spotify_songs.iloc[i, 21]
-            song = Song(identity, name, artist, popularity, genre, subgenre, danceability, energy, acousticness, liveness, tempo)
+            song = Song(identity, name, artist, popularity, genre, subgenre, danceability, energy, acousticness,
+                        liveness, tempo)
             song_object.append(song)
 
         with open("myData.dat", "wb") as outFile:
@@ -302,6 +320,7 @@ def main():
     recommender = Recommender(song_object)
     app = SpotifyGUI(recommender)
     app.mainloop()
+
 
 if __name__ == "__main__":
     main()
